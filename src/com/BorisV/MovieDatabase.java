@@ -1,25 +1,28 @@
-package com.clara;
+package com.BorisV;
 import java.sql.*;
 
 public class MovieDatabase {
 
+    private static final String DRIVERS = "com.mysql.cj.jdbc.Driver";
     private static String DB_CONNECTION_URL = "jdbc:mysql://localhost:3306/";
     private static final String DB_NAME = "movies";
-    private static final String USER = "root";
-    private static final String PASS = "";
+    private static final String USER = "coder";
+    private static final String PASS = "Coder1";
 
     static Statement statement = null;
     static Connection conn = null;
     static ResultSet rs = null;
 
     public final static String MOVIE_TABLE_NAME = "movie_reviews";
-    public final static String PK_COLUMN = "id";                   //Primary key column. Each movie will have a unique ID.
-                                                                    //A primary key is needed to allow updates to the database on modifications to ResultSet
+    public final static String PK_COLUMN = "id";
+    //Primary key column. Each movie will have a unique ID.
+    //A primary key is needed to allow updates to the database on modifications to ResultSet.
+
     public final static String TITLE_COLUMN = "title";
     public final static String YEAR_COLUMN = "year_released";
     public final static String RATING_COLUMN = "rating";
 
-    public final static int MOVIE_MIN_RATING = 1;
+    public final static int MOVIE_MIN_RATING = 0;
     public final static int MOVIE_MAX_RATING = 5;
 
     private static MovieDataModel movieDataModel;
@@ -50,6 +53,7 @@ public class MovieDatabase {
                 rs.close();
             }
 
+            //Get all data from table.
             String getAllData = "SELECT * FROM " + MOVIE_TABLE_NAME;
             rs = statement.executeQuery(getAllData);
 
@@ -73,14 +77,22 @@ public class MovieDatabase {
     }
 
     public static boolean setup(){
+            /*
+            Make sure that the mysql-connector-java-8... is in the path \\Java\\jdk1.8.0...\\jre\\lib\\ext\\mysql-connector-java-8.0.12
+            Also make sure the mysql-connector-j is in the File->Project Structure->Libraries or add it once it has been added to the
+            Java folder. The mysql-connector in the MySQL folder -> MySQL\Connector J 8.0
+             */
         try {
 
             //Load driver class
             try {
-                String Driver = "com.mysql.jdbc.Driver";
-                Class.forName(Driver);
+                //This is are the static final vars at the beginning of this page.
+                Class.forName(DRIVERS);
             } catch (ClassNotFoundException cnfe) {
-                System.out.println("No database drivers found. Quitting");
+                System.out.println("No database drivers found. Quitting \nMake sure that the mysql-connector-java-8..." +
+                                " is in the path \\Java\\jdk1.8.0...\\jre\\lib\\ext\\mysql-connector-java-8.0.12");
+                System.out.println("Also make sure the mysql-connector-j is in the File->Project Structure->Libraries " +
+                        " or add it once it has been added to the Java folder.");
                 return false;
             }
 
@@ -115,11 +127,14 @@ public class MovieDatabase {
                 //Example SQL: INSERT INTO movie_reviews ( title, year_released, rating ) VALUES ( 'Back to the future', 1985, 5)
                 //Here we have to specify which columns the data will go into, because we want to omit the ID column and have MySQL fill it in for us.
                 //But, since we are only adding 3 pieces of data for 4 columns, we have to specify which columns each data item is for.
-                String addDataSQL = "INSERT INTO " + MOVIE_TABLE_NAME + "(" + TITLE_COLUMN + ", " + YEAR_COLUMN + ", " + RATING_COLUMN + ")" + " VALUES ('Back to the future', 1985, 5)";
+                String addDataSQL = "INSERT INTO " + MOVIE_TABLE_NAME + "(" + TITLE_COLUMN + ", " + YEAR_COLUMN + ", " + RATING_COLUMN + ")" +
+                        " VALUES ('Back to the future', 1985, 5)";
                 statement.executeUpdate(addDataSQL);
-                addDataSQL = "INSERT INTO " + MOVIE_TABLE_NAME +  "(" + TITLE_COLUMN + ", " + YEAR_COLUMN + ", " + RATING_COLUMN + ")" + " VALUES('Back to the Future II', 1989, 4)";
+                addDataSQL = "INSERT INTO " + MOVIE_TABLE_NAME +  "(" + TITLE_COLUMN + ", " + YEAR_COLUMN + ", " + RATING_COLUMN + ")" +
+                        " VALUES('Back to the Future II', 1989, 4)";
                 statement.executeUpdate(addDataSQL);
-                addDataSQL = "INSERT INTO " + MOVIE_TABLE_NAME +  "(" + TITLE_COLUMN + ", " + YEAR_COLUMN + ", " + RATING_COLUMN + ")" + " VALUES ('Back to the Future III', 1990, 3)";
+                addDataSQL = "INSERT INTO " + MOVIE_TABLE_NAME +  "(" + TITLE_COLUMN + ", " + YEAR_COLUMN + ", " + RATING_COLUMN + ")" +
+                        " VALUES ('Back to the Future III', 1990, 3)";
                 statement.executeUpdate(addDataSQL);
             }
             return true;
@@ -133,13 +148,13 @@ public class MovieDatabase {
 
     private static boolean movieTableExists() throws SQLException {
 
-            String checkTablePresentQuery = "SHOW TABLES LIKE '" + MOVIE_TABLE_NAME + "'";   //Can query the database schema
-            ResultSet tablesRS = statement.executeQuery(checkTablePresentQuery);
-            if (tablesRS.next()) {    //If ResultSet has a next row, it has at least one row... that must be our table
-                return true;
-            }
-            return false;
-
+        //Can query the database schema
+        String checkTablePresentQuery = "SHOW TABLES LIKE '" + MOVIE_TABLE_NAME + "'";
+           ResultSet tablesRS = statement.executeQuery(checkTablePresentQuery);
+           if (tablesRS.next()) {    //If ResultSet has a next row, it has at least one row... that must be our table
+               return true;
+           }
+           return false;
     }
 
     //Close the ResultSet, statement and connection, in that order.

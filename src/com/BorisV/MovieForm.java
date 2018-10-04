@@ -1,4 +1,4 @@
-package com.clara;
+package com.BorisV;
 
 import javax.swing.*;
 import java.awt.*;
@@ -7,7 +7,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.Calendar;
-
 
 public class MovieForm extends JFrame implements WindowListener{
     private JTable movieDataTable;
@@ -28,15 +27,13 @@ public class MovieForm extends JFrame implements WindowListener{
         setVisible(true);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-
         //Set up JTable
         movieDataTable.setGridColor(Color.BLACK);
         movieDataTable.setModel(movieDataTableModel);
 
         //Set up the rating spinner.
         //SpinnerNumberModel constructor arguments: spinner's initial value, min, max, step.
-        ratingSpinner.setModel(new SpinnerNumberModel(1, MovieDatabase.MOVIE_MIN_RATING, MovieDatabase.MOVIE_MAX_RATING, 1));
-
+        ratingSpinner.setModel(new SpinnerNumberModel(0, MovieDatabase.MOVIE_MIN_RATING, MovieDatabase.MOVIE_MAX_RATING, 1));
 
         //Event handlers for add, delete and quit buttons
         addNewMovieButton.addActionListener(new ActionListener() {
@@ -75,6 +72,10 @@ public class MovieForm extends JFrame implements WindowListener{
                 System.out.println("Adding " + titleData + " " + yearData + " " + ratingData);
                 boolean insertedRow = movieDataTableModel.insertRow(titleData, yearData, ratingData);
 
+                titleTextField.setText(" ");
+                yearTextField.setText(" ");
+                ratingSpinner.setValue(0);
+
                 if (!insertedRow) {
                     JOptionPane.showMessageDialog(rootPane, "Error adding new movie");
                 }
@@ -87,8 +88,15 @@ public class MovieForm extends JFrame implements WindowListener{
         quitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                MovieDatabase.shutdown();
-                System.exit(0);   //Should probably be a call back to Main class so all the System.exit(0) calls are in one place.
+
+                Object pane = JOptionPane.showConfirmDialog(null, "Are you sure?", "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if ((int)pane==0){
+                   MovieDatabase.shutdown();
+                   System.exit(0);   //Should probably be a call back to Main class so all the System.exit(0) calls are in one place.
+                }
+                else {
+                    MovieDatabase.loadAllMovies();
+                }
             }
         });
 
@@ -112,11 +120,21 @@ public class MovieForm extends JFrame implements WindowListener{
 
     //windowListener methods. Only need one of them, but are required to implement the others anyway
     //WindowClosing will call DB shutdown code, which is important, so the DB is in a consistent state however the application is closed.
-
     @Override
     public void windowClosing(WindowEvent e) {
-        System.out.println("closing");
-        MovieDatabase.shutdown();}
+        //In this option the user gets a warning that the window is about to be closed.
+        Object pane = JOptionPane.showConfirmDialog(null, "Are you sure?", "Warning...Closing Window", +
+                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if ((int)pane==0){ //Only if the user clicks 'yes'
+            System.out.println("closing");
+            MovieDatabase.shutdown();
+            System.exit(0);   //Should probably be a call back to Main class so all the System.exit(0) calls are in one place.
+        }
+        else {
+            MovieDatabase.loadAllMovies();
+            setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        }
+    }
 
     @Override
     public void windowClosed(WindowEvent e) {}

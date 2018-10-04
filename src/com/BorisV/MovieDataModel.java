@@ -1,9 +1,11 @@
-package com.clara; 
+package com.BorisV;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import java.awt.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class MovieDataModel extends AbstractTableModel {
 
@@ -91,13 +93,14 @@ public class MovieDataModel extends AbstractTableModel {
             newRating = Integer.parseInt(newValue.toString());
 
             if (newRating < MovieDatabase.MOVIE_MIN_RATING || newRating > MovieDatabase.MOVIE_MAX_RATING) {
-                throw new NumberFormatException("Movie rating must be within the valid range");
+                throw new NumberFormatException("Movie rating must be within " + MovieDatabase.MOVIE_MIN_RATING +
+                        " and " + MovieDatabase.MOVIE_MAX_RATING);
             }
         } catch (NumberFormatException ne) {
             //Error dialog box. First argument is the parent GUI component, which is only used to center the
             // dialog box over that component. We don't have a reference to any GUI components here
             // but are allowed to use null - this means the dialog box will show in the center of your screen.
-            JOptionPane.showMessageDialog(null, "Try entering a number between " + MovieDatabase.MOVIE_MIN_RATING + " " + MovieDatabase.MOVIE_MAX_RATING);
+            JOptionPane.showMessageDialog(null, "Entering a number between " + MovieDatabase.MOVIE_MIN_RATING + " " + MovieDatabase.MOVIE_MAX_RATING);
             //return prevents the following database update code happening...
             return;
         }
@@ -107,25 +110,37 @@ public class MovieDataModel extends AbstractTableModel {
             resultSet.absolute(row + 1);
             resultSet.updateInt(MovieDatabase.RATING_COLUMN, newRating);
             resultSet.updateRow();
-            fireTableDataChanged();
+            fireTableDataChanged(); //This gets the database updated.
         } catch (SQLException e) {
             System.out.println("error changing rating " + e);
         }
 
     }
 
-
-    @Override
-    //We only want user to be able to edit column 2 - the rating column.
+    //We only want user to be able to edit column 3 - the rating column.
     //If this method always returns true, the whole table will be editable.
 
-    //TODO how can we avoid using a magic number (if col==3) ) here? This code depends on column 3 being the rating.
     //This might change if we were to add more data to our table, for example storing names of people who created the review.
     //TODO To fix: look into table column models, and generate the number columns based on the columns found in the ResultSet.
+
+    /**
+     * One option is to do a if(col==3) where 3 is the column with the name that need editing,
+     * but what happens if the columns expand, the program stills looks at number 3 column. That
+     * why doing the getColumnName is better and is method from the AbstractTableModel.
+     * @param col number of the column that can be edited.
+     * @see #getColumnName(int)
+     */
+    @Override
     public boolean isCellEditable(int row, int col){
-        if (col == 3) {
+        String colName = MovieDatabase.RATING_COLUMN; //Get the var that stores the name of the column.
+
+        //This gets the name of the column that the user has clicked on.
+        String clickedName = getColumnName(col);
+        if (clickedName.equals(colName)) {
             return true;
         }
+
+        //Default
         return false;
     }
 
@@ -168,9 +183,9 @@ public class MovieDataModel extends AbstractTableModel {
     @Override
     public String getColumnName(int col){
         //Get from ResultSet metadata, which contains the database column names
-        //TODO translate DB column names into something nicer for display, so "YEAR_RELEASED" becomes "Year Released"
         try {
             return resultSet.getMetaData().getColumnName(col + 1);
+
         } catch (SQLException se) {
             System.out.println("Error fetching column names" + se);
             return "?";
